@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Create channel{% endblock %}
+
+{% block content %}
+<div class="content-pane">
+  <header class="content-header">
+    <h2 class="mb-0">Create a channel</h2>
+  </header>
+  <section class="content-section" style="max-width: 540px;">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        {{ form.name|add_class:"form-control" }}
+        {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors|join:" " }}</div>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        {{ form.description|add_class:"form-control" }}
+      </div>
+      <div class="mb-4">
+        <label class="form-label">Visibility</label>
+        {{ form.kind|add_class:"form-select" }}
+        <div class="form-text text-muted">Public channels are visible to everyone. Private channels are invite-only.</div>
+      </div>
+      <button type="submit" class="btn btn-primary">Create channel</button>
+      <a href="{% url 'chat:channel_list' %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+  </section>
+</div>
+{% endblock %}

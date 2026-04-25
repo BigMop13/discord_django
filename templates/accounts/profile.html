@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }} - profile{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+  <div class="profile-banner"></div>
+  <div class="profile-card card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex align-items-center mb-3">
+        {% if profile_user.avatar %}
+          <img src="{{ profile_user.avatar.url }}" alt="" class="profile-avatar">
+        {% else %}
+          <span class="profile-avatar avatar-fallback">{{ profile_user.initials }}</span>
+        {% endif %}
+        <div class="ms-3 flex-grow-1">
+          <h3 class="mb-0">{{ profile_user.username }}</h3>
+          <div class="text-muted small">
+            <span class="status-dot {{ profile_user.status }}"></span>
+            {{ profile_user.get_status_display }} - {{ profile_user.role_label }}
+          </div>
+        </div>
+        <div class="text-end">
+          {% if is_self %}
+            <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-light btn-sm">
+              <i class="bi bi-pencil-square me-1"></i>Edit profile
+            </a>
+          {% else %}
+            <a href="{% url 'dm:open_with' profile_user.username %}" class="btn btn-primary btn-sm">
+              <i class="bi bi-chat-fill me-1"></i>Send message
+            </a>
+            {% if user.is_moderator %}
+              <form method="post" action="{% url 'moderation:toggle_block' profile_user.id %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                  <i class="bi bi-slash-circle me-1"></i>Block / Unblock
+                </button>
+              </form>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <hr class="border-secondary">
+
+      <h6 class="text-uppercase text-muted small">About me</h6>
+      <p class="mb-3">{{ profile_user.bio|default:"This user hasn't written a bio yet." }}</p>
+
+      <h6 class="text-uppercase text-muted small">Member since</h6>
+      <p class="mb-0">{{ profile_user.date_joined|date:"F j, Y" }}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

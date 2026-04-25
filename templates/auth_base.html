@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block body_class %}auth-body{% endblock %}
+
+{% block layout %}
+<div class="auth-shell">
+  <div class="auth-card">
+    {% include "_messages.html" %}
+    {% block auth_content %}{% endblock %}
+  </div>
+  <div class="auth-glow"></div>
+</div>
+{% endblock %}

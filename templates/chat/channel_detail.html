@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}#{{ channel.name }}{% endblock %}
+
+{% block content %}
+<div class="chat-pane" data-channel-id="{{ channel.id }}" data-current-user="{{ user.id }}">
+  <header class="chat-header">
+    <div>
+      <h4 class="mb-0">
+        <i class="bi {% if channel.kind == 'private' %}bi-lock-fill{% else %}bi-hash{% endif %}"></i>
+        {{ channel.name }}
+      </h4>
+      <p class="text-muted small mb-0">{{ channel.description|default:"No description." }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      {% if not is_member %}
+        <form method="post" action="{% url 'chat:channel_join' channel.slug %}">
+          {% csrf_token %}
+          <button class="btn btn-primary btn-sm">Join</button>
+        </form>
+      {% else %}
+        <form method="post" action="{% url 'chat:channel_leave' channel.slug %}">
+          {% csrf_token %}
+          <button class="btn btn-outline-danger btn-sm">Leave</button>
+        </form>
+      {% endif %}
+      {% if can_manage %}
+        <a href="{% url 'chat:channel_manage' channel.slug %}" class="btn btn-outline-light btn-sm">
+          <i class="bi bi-sliders me-1"></i>Manage
+        </a>
+      {% endif %}
+    </div>
+  </header>
+
+  <div id="messageList" class="message-list">
+    {% for msg in messages_history %}
+      {% include "chat/_message.html" with msg=msg %}
+    {% endfor %}
+  </div>
+
+  {% if can_post %}
+    {% include "chat/_composer.html" with channel=channel upload_url='chat:upload_attachment' %}
+  {% else %}
+    <div class="composer-disabled">
+      <i class="bi bi-info-circle me-1"></i>
+      Join this channel to send messages.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block right_pane %}
+<aside class="member-pane">
+  <div class="member-pane-heading">
+    Members - {{ members|length }}
+  </div>
+  <ul class="member-list">
+    {% for m in members %}
+      <li class="member-list-item">
+        <a href="{% url 'accounts:profile_detail' m.user.username %}" class="member-link">
+          {% if m.user.avatar %}
+            <img src="{{ m.user.avatar.url }}" alt="" class="member-avatar">
+          {% else %}
+            <span class="member-avatar avatar-fallback">{{ m.user.initials }}</span>
+          {% endif %}
+          <span class="status-dot {{ m.user.status }}"></span>
+          <span class="member-name">{{ m.user.username }}</span>
+          {% if m.is_owner %}<i class="bi bi-star-fill text-warning ms-1" title="Owner"></i>{% endif %}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</aside>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  window.CHAT_CONFIG = {
+    type: "channel",
+    id: {{ channel.id }},
+    wsPath: "/ws/channel/{{ channel.id }}/",
+    uploadUrl: "{% url 'chat:upload_attachment' channel.slug %}",
+    currentUserId: {{ user.id }},
+    isModerator: {{ user.is_moderator|yesno:"true,false" }},
+  };
+</script>
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}

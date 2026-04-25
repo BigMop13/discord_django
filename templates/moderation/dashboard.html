@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Moderation dashboard{% endblock %}
+
+{% block content %}
+<div class="content-pane">
+  <header class="content-header">
+    <h2 class="mb-0"><i class="bi bi-shield-check me-2"></i>Moderation</h2>
+    <span class="badge bg-warning text-dark">{{ user.role_label }}</span>
+  </header>
+
+  <section class="content-section">
+    <h6 class="text-uppercase text-muted small">Open reports</h6>
+    {% if open_reports %}
+      <ul class="list-group list-group-flush">
+        {% for r in open_reports %}
+          <li class="list-group-item bg-transparent text-light">
+            <div class="d-flex">
+              <div class="flex-grow-1">
+                <div class="small text-muted">
+                  by <strong>{{ r.reporter.username }}</strong>
+                  - {{ r.created_at|date:"M j, H:i" }}
+                </div>
+                <div>
+                  {% if r.target_user %}
+                    Reports user <a href="{% url 'accounts:profile_detail' r.target_user.username %}">@{{ r.target_user.username }}</a>
+                  {% endif %}
+                  {% if r.target_message %}
+                    Reports message in
+                    <a href="{% url 'chat:channel_detail' r.target_message.channel.slug %}">#{{ r.target_message.channel.name }}</a>:
+                    <em>{{ r.target_message.body|truncatechars:80 }}</em>
+                  {% endif %}
+                </div>
+                <div class="mt-1">{{ r.reason }}</div>
+              </div>
+              <form method="post" action="{% url 'moderation:resolve_report' r.id %}" class="d-flex gap-2 align-items-start">
+                {% csrf_token %}
+                <button name="decision" value="resolved" class="btn btn-sm btn-success">Resolve</button>
+                <button name="decision" value="dismiss" class="btn btn-sm btn-outline-secondary">Dismiss</button>
+              </form>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="text-muted">No open reports. Nice and quiet.</div>
+    {% endif %}
+  </section>
+
+  <section class="content-section">
+    <h6 class="text-uppercase text-muted small">Recently deleted messages</h6>
+    {% if recent_deleted %}
+      <ul class="list-group list-group-flush">
+        {% for m in recent_deleted %}
+          <li class="list-group-item bg-transparent text-light">
+            <div class="small text-muted">
+              {{ m.created_at|date:"M j, H:i" }} - in
+              <a href="{% url 'chat:channel_detail' m.channel.slug %}">#{{ m.channel.name }}</a>
+              by <a href="{% url 'accounts:profile_detail' m.author.username %}">@{{ m.author.username }}</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="text-muted">Nothing deleted recently.</div>
+    {% endif %}
+  </section>
+
+  <section class="content-section">
+    <h6 class="text-uppercase text-muted small">Recent blocks</h6>
+    {% if blocks %}
+      <ul class="list-group list-group-flush">
+        {% for b in blocks %}
+          <li class="list-group-item bg-transparent text-light small">
+            <strong>@{{ b.blocker.username }}</strong> blocked <strong>@{{ b.blocked.username }}</strong>
+            <span class="text-muted">- {{ b.created_at|date:"M j, H:i" }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="text-muted">No blocks recorded.</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

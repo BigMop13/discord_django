@@ -1,0 +1,52 @@
+{# Single message render. Re-used by initial render and by the JS template #}
+<div class="message" data-message-id="{{ msg.id }}" data-author-id="{{ msg.author_id }}">
+  <div class="message-avatar">
+    {% if msg.author.avatar %}
+      <img src="{{ msg.author.avatar.url }}" alt="">
+    {% else %}
+      <span class="avatar-fallback">{{ msg.author.initials }}</span>
+    {% endif %}
+  </div>
+  <div class="message-body">
+    <div class="message-meta">
+      <a href="{% url 'accounts:profile_detail' msg.author.username %}" class="message-author">{{ msg.author.username }}</a>
+      <span class="message-time">{{ msg.created_at|date:"M j, H:i" }}</span>
+      <span class="message-actions">
+        {% if not msg.is_deleted %}
+          <button type="button" class="msg-action" data-react="{{ msg.id }}" title="Add reaction">
+            <i class="bi bi-emoji-smile"></i>
+          </button>
+          {% if user.is_moderator or msg.author_id == user.id %}
+            <button type="button" class="msg-action text-danger" data-delete="{{ msg.id }}" title="Delete">
+              <i class="bi bi-trash"></i>
+            </button>
+          {% endif %}
+        {% endif %}
+      </span>
+    </div>
+    {% if msg.is_deleted %}
+      <div class="message-deleted"><i class="bi bi-trash3"></i> message deleted</div>
+    {% else %}
+      {% if msg.body %}<div class="message-text">{{ msg.body|linebreaksbr }}</div>{% endif %}
+      {% if msg.kind == 'image' and msg.attachment %}
+        <a href="{{ msg.attachment.url }}" target="_blank" rel="noopener">
+          <img src="{{ msg.attachment.url }}" alt="" class="message-image">
+        </a>
+      {% elif msg.kind == 'audio' and msg.attachment %}
+        <audio controls preload="metadata" src="{{ msg.attachment.url }}" class="message-audio"></audio>
+      {% endif %}
+      {% with reactions=msg.reactions.all %}
+        {% if reactions %}
+          <div class="message-reactions" data-reactions-for="{{ msg.id }}">
+            {% regroup reactions by emoji as reaction_groups %}
+            {% for group in reaction_groups %}
+              <button type="button" class="reaction-pill" data-react="{{ msg.id }}" data-emoji="{{ group.grouper }}">
+                <span>{{ group.grouper }}</span> <span class="reaction-count">{{ group.list|length }}</span>
+              </button>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    {% endif %}
+  </div>
+</div>

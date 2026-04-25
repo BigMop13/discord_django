@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="content-pane">
+  <header class="content-header">
+    <div>
+      <h2 class="mb-1">Hi {{ user.username }} 👋</h2>
+      <p class="text-muted mb-0">Pick a channel to drop into, or DM a friend.</p>
+    </div>
+    <a href="{% url 'chat:channel_create' %}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>New channel
+    </a>
+  </header>
+
+  {% if my_channels %}
+  <section class="content-section">
+    <h6 class="text-uppercase text-muted small">Your channels</h6>
+    <div class="row g-3">
+      {% for ch in my_channels %}
+        <div class="col-md-6 col-lg-4">
+          <a href="{% url 'chat:channel_detail' ch.slug %}" class="text-decoration-none">
+            <div class="channel-card card border-0 h-100">
+              <div class="card-body">
+                <h6 class="card-title mb-1"><i class="bi {% if ch.kind == 'private' %}bi-lock-fill{% else %}bi-hash{% endif %} me-1"></i>{{ ch.name }}</h6>
+                <p class="card-text text-muted small mb-0">{{ ch.description|default:"" }}</p>
+              </div>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="content-section">
+    <h6 class="text-uppercase text-muted small">Public channels to explore</h6>
+    {% if public_channels %}
+      <div class="row g-3">
+        {% for ch in public_channels %}
+          <div class="col-md-6 col-lg-4">
+            <a href="{% url 'chat:channel_detail' ch.slug %}" class="text-decoration-none">
+              <div class="channel-card card border-0 h-100">
+                <div class="card-body">
+                  <h6 class="card-title mb-1"><i class="bi bi-hash me-1"></i>{{ ch.name }}</h6>
+                  <p class="card-text text-muted small mb-2">{{ ch.description|default:"" }}</p>
+                  <small class="text-muted">{{ ch.members.count }} member{{ ch.members.count|pluralize }}</small>
+                </div>
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-muted">No public channels yet. <a href="{% url 'chat:channel_create' %}">Create the first one.</a></div>
+    {% endif %}
+  </section>
+
+  <section class="content-section">
+    <h6 class="text-uppercase text-muted small">Online right now</h6>
+    {% if online_users %}
+      <div class="d-flex flex-wrap gap-2">
+        {% for u in online_users %}
+          <a href="{% url 'accounts:profile_detail' u.username %}" class="user-chip">
+            {% if u.avatar %}
+              <img src="{{ u.avatar.url }}" class="user-chip-avatar" alt="">
+            {% else %}
+              <span class="user-chip-avatar avatar-fallback">{{ u.initials }}</span>
+            {% endif %}
+            <span class="status-dot online" data-presence-user="{{ u.id }}"></span>
+            <span>{{ u.username }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-muted">Looks quiet right now.</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

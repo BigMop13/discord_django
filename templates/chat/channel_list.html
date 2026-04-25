@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Channels{% endblock %}
+
+{% block content %}
+<div class="content-pane">
+  <header class="content-header">
+    <h2 class="mb-0"><i class="bi bi-hash"></i>Channels</h2>
+    <a href="{% url 'chat:channel_create' %}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>New channel
+    </a>
+  </header>
+
+  <section class="content-section">
+    <h6 class="text-uppercase text-muted small">Public</h6>
+    <div class="row g-3">
+      {% for ch in public_channels %}
+        <div class="col-md-6 col-lg-4">
+          <div class="channel-card card border-0 h-100">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title mb-1">
+                <i class="bi bi-hash me-1"></i>{{ ch.name }}
+              </h5>
+              <p class="card-text text-muted small flex-grow-1">{{ ch.description|default:"No description." }}</p>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <small class="text-muted">{{ ch.members.count }} member{{ ch.members.count|pluralize }}</small>
+                <div class="d-flex gap-2">
+                  <a href="{% url 'chat:channel_detail' ch.slug %}" class="btn btn-outline-light btn-sm">View</a>
+                  {% if ch.id not in joined_ids %}
+                    <form method="post" action="{% url 'chat:channel_join' ch.slug %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-primary btn-sm">Join</button>
+                    </form>
+                  {% else %}
+                    <span class="badge bg-success-subtle text-success">Joined</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12 text-muted">No public channels yet. Be the first to create one!</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if private_channels %}
+  <section class="content-section">
+    <h6 class="text-uppercase text-muted small">Private (you are a member)</h6>
+    <div class="row g-3">
+      {% for ch in private_channels %}
+        <div class="col-md-6 col-lg-4">
+          <div class="channel-card card border-0 h-100">
+            <div class="card-body">
+              <h5 class="card-title mb-1"><i class="bi bi-lock-fill me-1"></i>{{ ch.name }}</h5>
+              <p class="card-text text-muted small">{{ ch.description|default:"No description." }}</p>
+              <a href="{% url 'chat:channel_detail' ch.slug %}" class="btn btn-outline-light btn-sm">Open</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

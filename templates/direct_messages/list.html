@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Direct messages{% endblock %}
+
+{% block content %}
+<div class="content-pane">
+  <header class="content-header">
+    <h2 class="mb-0"><i class="bi bi-chat-dots-fill me-2"></i>Direct messages</h2>
+  </header>
+
+  <section class="content-section">
+    {% if conversations %}
+      <ul class="list-group list-group-flush">
+        {% for c in conversations %}
+          <li class="list-group-item bg-transparent text-light d-flex align-items-center">
+            {% if c.other_for.avatar %}
+              <img src="{{ c.other_for.avatar.url }}" class="member-avatar me-3" alt="">
+            {% else %}
+              <span class="member-avatar avatar-fallback me-3">{{ c.other_for.initials }}</span>
+            {% endif %}
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ c.other_for.username }}</div>
+              <div class="text-muted small">
+                <span class="status-dot {{ c.other_for.status }}" data-presence-user="{{ c.other_for.id }}"></span>
+                {{ c.other_for.get_status_display }}
+              </div>
+            </div>
+            <a href="{% url 'dm:conversation_detail' c.id %}" class="btn btn-outline-light btn-sm">Open</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="empty-state text-center py-5 text-muted">
+        <i class="bi bi-chat-dots display-4 d-block mb-2"></i>
+        <p class="mb-1">No direct messages yet.</p>
+        <p class="mb-0 small">Find someone via the search bar to start chatting.</p>
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

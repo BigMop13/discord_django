@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Manage #{{ channel.name }}{% endblock %}
+
+{% block content %}
+<div class="content-pane">
+  <header class="content-header">
+    <h2 class="mb-0"><i class="bi bi-sliders me-2"></i>Manage #{{ channel.name }}</h2>
+    <a href="{% url 'chat:channel_detail' channel.slug %}" class="btn btn-outline-light btn-sm">
+      <i class="bi bi-arrow-left me-1"></i>Back to channel
+    </a>
+  </header>
+
+  <section class="content-section">
+    <h6 class="text-uppercase text-muted small">Channel details</h6>
+    <form method="post" class="row g-3" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="action" value="rename">
+      <div class="col-md-6">
+        <label class="form-label">Name</label>
+        <input class="form-control" name="name" value="{{ channel.name }}" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Description</label>
+        <input class="form-control" name="description" value="{{ channel.description }}">
+      </div>
+      <div class="col-12">
+        <button class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="content-section">
+    <h6 class="text-uppercase text-muted small">Members</h6>
+    <ul class="list-group list-group-flush">
+      {% for m in members %}
+        <li class="list-group-item bg-transparent text-light d-flex align-items-center">
+          {% if m.user.avatar %}
+            <img src="{{ m.user.avatar.url }}" class="member-avatar me-2" alt="">
+          {% else %}
+            <span class="member-avatar avatar-fallback me-2">{{ m.user.initials }}</span>
+          {% endif %}
+          <span class="flex-grow-1">{{ m.user.username }}{% if m.is_owner %} <i class="bi bi-star-fill text-warning ms-1"></i>{% endif %}</span>
+          {% if not m.is_owner %}
+            <form method="post" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="kick">
+              <input type="hidden" name="user_id" value="{{ m.user.id }}">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-person-x"></i> Remove</button>
+            </form>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li class="list-group-item bg-transparent text-muted">No members yet.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="content-section">
+    <h6 class="text-uppercase text-danger small">Danger zone</h6>
+    <form method="post" onsubmit="return confirm('Delete this channel? This cannot be undone.');">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete">
+      <button class="btn btn-outline-danger">
+        <i class="bi bi-trash me-1"></i>Delete channel
+      </button>
+    </form>
+  </section>
+</div>
+{% endblock %}

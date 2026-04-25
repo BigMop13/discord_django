@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}DM with {{ other.username }}{% endblock %}
+
+{% block content %}
+<div class="chat-pane">
+  <header class="chat-header">
+    <div class="d-flex align-items-center">
+      {% if other.avatar %}
+        <img src="{{ other.avatar.url }}" class="member-avatar me-2" alt="">
+      {% else %}
+        <span class="member-avatar avatar-fallback me-2">{{ other.initials }}</span>
+      {% endif %}
+      <div>
+        <h4 class="mb-0">{{ other.username }}</h4>
+        <p class="text-muted small mb-0">
+          <span class="status-dot {{ other.status }}" data-presence-user="{{ other.id }}"></span>
+          {{ other.get_status_display }}
+        </p>
+      </div>
+    </div>
+    <div>
+      <form method="post" action="{% url 'moderation:toggle_block' other.id %}" class="d-inline">
+        {% csrf_token %}
+        <button class="btn btn-outline-danger btn-sm">
+          <i class="bi bi-slash-circle me-1"></i>{% if blocked_by_me %}Unblock{% else %}Block{% endif %}
+        </button>
+      </form>
+    </div>
+  </header>
+
+  {% if blocked_by_me or blocked_by_them %}
+    <div class="composer-disabled">
+      <i class="bi bi-shield-exclamation me-1"></i>
+      {% if blocked_by_me %}You have blocked this user.{% else %}This user has blocked you.{% endif %}
+    </div>
+  {% endif %}
+
+  <div id="messageList" class="message-list">
+    {% for msg in messages_history %}
+      {% include "chat/_message.html" with msg=msg %}
+    {% endfor %}
+  </div>
+
+  {% if not blocked_by_me and not blocked_by_them %}
+    {% include "chat/_composer.html" with channel=None other=other %}
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  window.CHAT_CONFIG = {
+    type: "dm",
+    id: {{ conversation.id }},
+    wsPath: "/ws/dm/{{ conversation.id }}/",
+    uploadUrl: "{% url 'dm:upload_attachment' conversation.id %}",
+    currentUserId: {{ user.id }},
+    isModerator: {{ user.is_moderator|yesno:"true,false" }},
+  };
+</script>
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}

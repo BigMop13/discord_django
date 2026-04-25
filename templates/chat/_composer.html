@@ -1,0 +1,42 @@
+{% csrf_token %}
+<div class="composer">
+  <div class="composer-emoji-picker" id="emojiPicker" hidden>
+    {% for e in "👍 ❤ 😂 😮 😢 🔥 🎉 🙏 💯 🤔 👏 🚀"|safe|cut:" "|make_list %}{% endfor %}
+    <button type="button" class="emoji-btn" data-emoji="👍">👍</button>
+    <button type="button" class="emoji-btn" data-emoji="❤️">❤️</button>
+    <button type="button" class="emoji-btn" data-emoji="😂">😂</button>
+    <button type="button" class="emoji-btn" data-emoji="😮">😮</button>
+    <button type="button" class="emoji-btn" data-emoji="😢">😢</button>
+    <button type="button" class="emoji-btn" data-emoji="🔥">🔥</button>
+    <button type="button" class="emoji-btn" data-emoji="🎉">🎉</button>
+    <button type="button" class="emoji-btn" data-emoji="🙏">🙏</button>
+    <button type="button" class="emoji-btn" data-emoji="💯">💯</button>
+    <button type="button" class="emoji-btn" data-emoji="🤔">🤔</button>
+    <button type="button" class="emoji-btn" data-emoji="👏">👏</button>
+    <button type="button" class="emoji-btn" data-emoji="🚀">🚀</button>
+  </div>
+  <form id="composerForm" class="composer-form">
+    <button type="button" class="composer-btn" id="attachImageBtn" title="Upload image">
+      <i class="bi bi-image"></i>
+    </button>
+    <button type="button" class="composer-btn" id="recordAudioBtn" title="Record voice message">
+      <i class="bi bi-mic-fill"></i>
+    </button>
+    <input type="file" id="imageInput" accept="image/*" hidden>
+    <input id="composerText" type="text" autocomplete="off"
+           class="composer-input"
+           placeholder="{% if channel %}Message #{{ channel.name }}{% else %}Message @{{ other.username }}{% endif %}">
+    <button type="button" class="composer-btn" id="emojiToggleBtn" title="Emoji"><i class="bi bi-emoji-smile"></i></button>
+    <button type="submit" class="btn btn-primary btn-sm composer-send" title="Send">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </form>
+  <div class="composer-recording" id="recordingBar" hidden>
+    <span class="rec-dot"></span>
+    <span class="rec-time" id="recTime">0:00</span>
+    <button type="button" class="btn btn-sm btn-outline-light" id="stopRecordBtn">
+      <i class="bi bi-stop-fill me-1"></i>Stop & send
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" id="cancelRecordBtn">Cancel</button>
+  </div>
+</div>
