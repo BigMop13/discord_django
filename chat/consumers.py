@@ -6,6 +6,8 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.utils import timezone
 
+from accounts.notify import apush_to_user, build_channel_payload
+
 from .models import Channel, ChannelMembership, Message, Reaction
 
 
@@ -51,11 +53,14 @@ class ChannelChatConsumer(AsyncJsonWebsocketConsumer):
             body = (content.get("body") or "").strip()
             if not body:
                 return
-            payload = await self._save_text_message(user, self.channel_id, body)
-            if payload is not None:
+            result = await self._save_text_message(user, self.channel_id, body)
+            if result is not None:
+                payload, notify_payload, recipient_ids = result
                 await self.channel_layer.group_send(
                     self.group_name, {"type": "message.new", "message": payload}
                 )
+                for rid in recipient_ids:
+                    await apush_to_user(rid, notify_payload)
 
         elif action == "delete":
             message_id = content.get("message_id")
@@ -111,7 +116,11 @@ class ChannelChatConsumer(AsyncJsonWebsocketConsumer):
         msg = Message.objects.create(
             channel=ch, author=user, body=body, kind=Message.Kind.TEXT
         )
-        return _serialize_message(msg)
+        notify_payload = build_channel_payload(msg, ch)
+        recipient_ids = list(
+            ch.members.exclude(pk=user.pk).values_list("pk", flat=True)
+        )
+        return _serialize_message(msg), notify_payload, recipient_ids
 
     @database_sync_to_async
     def _soft_delete(self, user, message_id: int) -> bool:

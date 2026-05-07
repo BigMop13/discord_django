@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from accounts.notify import build_dm_payload, push_to_user
 from moderation.models import BlockedUser
 
 from .models import Conversation, DirectMessage
@@ -128,5 +129,8 @@ def upload_dm_attachment(request, conversation_id: int):
             dm_group_name(convo.id),
             {"type": "dm.new", "message": _serialize(msg)},
         )
+
+    if other is not None:
+        push_to_user(other.id, build_dm_payload(msg, convo))
 
     return JsonResponse({"id": msg.id, "url": msg.attachment.url, "kind": msg.kind})

@@ -355,3 +355,48 @@ a { color: inherit; }
 .error-code { font-size: 5rem; font-weight: 800; color: var(--accent); margin-bottom: 0; line-height: 1; }
 .error-title { margin-top: 8px; font-size: 1.4rem; }
 .error-text { color: var(--text-muted); margin-bottom: 20px; }
+
+/* Voice room ----------------------------------------------------------- */
+.voice-room { padding: 20px 24px; flex: 1; overflow-y: auto; }
+.voice-room-status .badge { letter-spacing: .5px; }
+.voice-member-list { display: flex; flex-direction: column; gap: 8px; }
+.voice-member {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 12px; border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.05);
+}
+.voice-member-avatar {
+  width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent); font-weight: 600;
+}
+.voice-member-name { flex-grow: 1; font-weight: 500; }
+.voice-mic-mute { color: #f04747; }
+#voiceMuteBtn.active {
+  background: rgba(240,71,71,.15);
+  border-color: #f04747;
+  color: #f04747;
+}
+
+/* Unread notification badges in sidebar -------------------------------- */
+.sidebar-item { position: relative; }
+.unread-badge {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: #f04747;
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.notif-toast { min-width: 280px; max-width: 360px; }
+.notif-toast a { color: inherit; }

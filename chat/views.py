@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from accounts.notify import build_channel_payload, push_to_user
 from accounts.permissions import moderator_required
 
 from .forms import ChannelForm
@@ -22,8 +23,9 @@ from .models import Channel, ChannelMembership, Message, Reaction
 
 @login_required
 def channel_list(request):
-    """List all channels the user can see (public + ones they joined)."""
+    """List all channels the user can see (public + voice + private they joined)."""
     public = Channel.objects.filter(kind=Channel.Kind.PUBLIC).order_by("name")
+    voice = Channel.objects.filter(kind=Channel.Kind.VOICE).order_by("name")
     joined_ids = list(
         ChannelMembership.objects.filter(user=request.user).values_list(
             "channel_id", flat=True
@@ -37,6 +39,7 @@ def channel_list(request):
         "chat/channel_list.html",
         {
             "public_channels": public,
+            "voice_channels": voice,
             "private_channels": private_joined,
             "joined_ids": set(joined_ids),
         },
@@ -194,6 +197,10 @@ def upload_attachment(request, slug: str):
     )
 
     _broadcast_new_message(channel.id, msg)
+
+    notify_payload = build_channel_payload(msg, channel)
+    for rid in channel.members.exclude(pk=request.user.pk).values_list("pk", flat=True):
+        push_to_user(rid, notify_payload)
 
     return JsonResponse({"id": msg.id, "url": msg.attachment.url, "kind": msg.kind})
 

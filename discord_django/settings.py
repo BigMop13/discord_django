@@ -7,6 +7,7 @@ suitable for local development with SQLite + the in-memory Channels layer.
 from pathlib import Path
 import os
 
+import dj_database_url
 from dotenv import load_dotenv
 
 
@@ -60,6 +61,10 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # WhiteNoise serves collected static files in production (must be right
+    # after SecurityMiddleware). In DEBUG mode Django's staticfiles app still
+    # serves static/ directly so this is a no-op locally.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -98,6 +103,14 @@ DATABASES = {
     }
 }
 
+# When DATABASE_URL is provided (Render attaches it automatically when a
+# Postgres service is linked), use it instead of the local SQLite file.
+_db_url = os.getenv("DATABASE_URL")
+if _db_url:
+    DATABASES["default"] = dj_database_url.parse(
+        _db_url, conn_max_age=600, ssl_require=True
+    )
+
 # Real-time: in-memory Channels layer (no Redis dependency, single-process).
 CHANNEL_LAYERS = {
     "default": {
@@ -129,8 +142,37 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# In production WhiteNoise serves compressed + hashed static files (cache
+# busting via the manifest). In DEBUG / tests we fall back to the plain
+# storage so `{% static %}` keeps working without `collectstatic`.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if DEBUG
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        ),
+    },
+}
+
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Render (and most PaaS) terminate HTTPS at a proxy and forward the request
+# to the app over plain HTTP, setting `X-Forwarded-Proto: https`. This tells
+# Django to trust that header so request.is_secure() returns True and CSRF
+# / cookie flags work correctly.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Production hardening: only enable when DEBUG is off so local HTTP dev
+# doesn't get redirected and cookies still work without SSL.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # 10 MB cap for uploaded attachments (images and audio).
 MAX_UPLOAD_SIZE_BYTES = int(os.getenv("MAX_UPLOAD_SIZE_BYTES", str(10 * 1024 * 1024)))

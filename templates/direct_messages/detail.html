@@ -51,6 +51,7 @@
 
 {% block extra_scripts %}
 <script>
+  window.CURRENT_LOCATION = { type: "dm", id: {{ conversation.id }} };
   window.CHAT_CONFIG = {
     type: "dm",
     id: {{ conversation.id }},

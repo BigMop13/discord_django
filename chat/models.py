@@ -18,6 +18,7 @@ class Channel(models.Model):
     class Kind(models.TextChoices):
         PUBLIC = "public", "Public"
         PRIVATE = "private", "Private"
+        VOICE = "voice", "Voice"
 
     name = models.CharField(max_length=80)
     slug = models.SlugField(max_length=90, unique=True)
@@ -63,9 +64,11 @@ class Channel(models.Model):
         return ChannelMembership.objects.filter(channel=self, user=user).exists()
 
     def can_view(self, user) -> bool:
-        if self.kind == self.Kind.PUBLIC:
-            return True
-        return self.is_member(user) or (user and user.is_authenticated and user.is_administrator())
+        if self.kind == self.Kind.PRIVATE:
+            return self.is_member(user) or (
+                user and user.is_authenticated and user.is_administrator()
+            )
+        return True
 
     def can_post(self, user) -> bool:
         if not user or not user.is_authenticated:

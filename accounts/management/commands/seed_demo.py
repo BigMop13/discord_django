@@ -31,9 +31,10 @@ DEMO_USERS = [
 ]
 
 DEMO_CHANNELS = [
-    ("general", "General chatter for everyone.",      "public"),
-    ("random",  "Memes, jokes, off-topic.",           "public"),
-    ("staff",   "Internal channel for moderators.",   "private"),
+    ("general",      "General chatter for everyone.",        "public"),
+    ("random",       "Memes, jokes, off-topic.",             "public"),
+    ("staff",        "Internal channel for moderators.",     "private"),
+    ("voice-lounge", "Drop in for a chat. WebRTC mesh, ~4 people max.", "voice"),
 ]
 
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
+from accounts.notify import apush_to_user, build_dm_payload
+
 from .models import Conversation, DirectMessage
 from moderation.models import BlockedUser
 
@@ -41,11 +43,14 @@ class DMConsumer(AsyncJsonWebsocketConsumer):
             body = (content.get("body") or "").strip()
             if not body:
                 return
-            payload = await self._save(user, self.conversation_id, body)
-            if payload is not None:
+            result = await self._save(user, self.conversation_id, body)
+            if result is not None:
+                payload, notify_payload, recipient_id = result
                 await self.channel_layer.group_send(
                     self.group_name, {"type": "dm.new", "message": payload}
                 )
+                if recipient_id is not None:
+                    await apush_to_user(recipient_id, notify_payload)
 
         elif action == "delete":
             message_id = content.get("message_id")
@@ -86,7 +91,9 @@ class DMConsumer(AsyncJsonWebsocketConsumer):
             body=body,
             kind=DirectMessage.Kind.TEXT,
         )
-        return _serialize(msg)
+        notify_payload = build_dm_payload(msg, convo)
+        recipient_id = other.id if other is not None else None
+        return _serialize(msg), notify_payload, recipient_id
 
     @database_sync_to_async
     def _soft_delete(self, user, message_id: int) -> bool:

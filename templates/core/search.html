@@ -53,7 +53,13 @@
               {% for c in channels %}
                 <li class="list-group-item bg-transparent text-light">
                   <a href="{% url 'chat:channel_detail' c.slug %}" class="text-decoration-none text-light fw-semibold">
-                    <i class="bi {% if c.kind == 'private' %}bi-lock-fill{% else %}bi-hash{% endif %} me-1"></i>{{ c.name }}
+                    {% if c.kind == 'voice' %}
+                      <i class="bi bi-volume-up-fill me-1"></i>
+                    {% elif c.kind == 'private' %}
+                      <i class="bi bi-lock-fill me-1"></i>
+                    {% else %}
+                      <i class="bi bi-hash me-1"></i>
+                    {% endif %}{{ c.name }}
                   </a>
                   <div class="text-muted small">{{ c.description|default:"No description." }}</div>
                 </li>

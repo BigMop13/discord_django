@@ -1,4 +1,4 @@
-"""WebSocket consumer that broadcasts user online/offline state."""
+"""WebSocket consumers for presence and per-user notifications."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.utils import timezone
 
 from .models import User
+from .notify import notifications_group
 
 
 PRESENCE_GROUP = "presence"
@@ -66,3 +67,31 @@ class PresenceConsumer(AsyncJsonWebsocketConsumer):
     def _touch(self, user: User) -> None:
         user.last_seen = timezone.now()
         user.save(update_fields=["last_seen"])
+
+
+class NotificationsConsumer(AsyncJsonWebsocketConsumer):
+    """Per-user notification stream.
+
+    The client opens one connection on every page (loaded from `base.html`).
+    Server-side hooks call `accounts.notify.push_to_user(user_id, payload)`
+    whenever a message is created in a channel the user belongs to or in a
+    DM addressed to them; the consumer simply forwards `payload` to the
+    browser, which decides how to render it (badge, toast, etc.).
+    """
+
+    async def connect(self):
+        user = self.scope.get("user")
+        if user is None or not user.is_authenticated:
+            await self.close(code=4401)
+            return
+        self.user_id = user.id
+        self.group_name = notifications_group(self.user_id)
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, code):
+        if hasattr(self, "group_name"):
+            await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
+    async def notify_message(self, event):
+        await self.send_json({"type": "notification", "payload": event["payload"]})

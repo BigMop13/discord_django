@@ -17,27 +17,48 @@
 
   <div class="sidebar-section">
     <div class="sidebar-heading d-flex align-items-center justify-content-between">
-      <span>Channels</span>
+      <span>Text Channels</span>
       <a href="{% url 'chat:channel_create' %}" class="btn btn-sm btn-link p-0 text-secondary" title="Create channel">
         <i class="bi bi-plus-lg"></i>
       </a>
     </div>
     <ul class="sidebar-list">
-      {% for ch in sidebar_channels %}
+      {% for ch in sidebar_text_channels %}
         <li>
           <a href="{% url 'chat:channel_detail' ch.slug %}"
              class="sidebar-item {% if request.resolver_match.url_name == 'channel_detail' and request.resolver_match.kwargs.slug == ch.slug %}active{% endif %}">
             <i class="bi {% if ch.kind == 'private' %}bi-lock-fill{% else %}bi-hash{% endif %}"></i>
             <span class="text-truncate">{{ ch.name }}</span>
+            <span class="unread-badge" data-unread-target="channel:{{ ch.id }}" hidden></span>
           </a>
         </li>
       {% empty %}
-        <li class="text-muted small px-3 py-1">No channels yet.</li>
+        <li class="text-muted small px-3 py-1">No text channels yet.</li>
       {% endfor %}
     </ul>
     <div class="px-3 pb-2">
       <a href="{% url 'chat:channel_list' %}" class="small text-decoration-none text-muted">Browse all &rarr;</a>
     </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading d-flex align-items-center justify-content-between">
+      <span>Voice Channels</span>
+    </div>
+    <ul class="sidebar-list">
+      {% for ch in sidebar_voice_channels %}
+        <li>
+          <a href="{% url 'chat:channel_detail' ch.slug %}"
+             class="sidebar-item {% if request.resolver_match.url_name == 'channel_detail' and request.resolver_match.kwargs.slug == ch.slug %}active{% endif %}">
+            <i class="bi bi-volume-up-fill"></i>
+            <span class="text-truncate">{{ ch.name }}</span>
+            <span class="unread-badge" data-unread-target="channel:{{ ch.id }}" hidden></span>
+          </a>
+        </li>
+      {% empty %}
+        <li class="text-muted small px-3 py-1">No voice channels yet.</li>
+      {% endfor %}
+    </ul>
   </div>
 
   <div class="sidebar-section">
@@ -59,6 +80,7 @@
               <span class="sidebar-avatar avatar-fallback">{{ other.initials }}</span>
             {% endif %}
             <span class="text-truncate">{{ other.username }}</span>
+            <span class="unread-badge" data-unread-target="dm:{{ convo.id }}" hidden></span>
           </a>
         </li>
         {% endwith %}
